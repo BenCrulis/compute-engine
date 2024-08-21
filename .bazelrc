@@ -17,6 +17,9 @@ build --config=monolithic
 test --compilation_mode=fastbuild
 test --cxxopt -DTF_LITE_DISABLE_X86_NEON
 
+# enable optimizations
+build --copt=-O3 --copt=-mfma --copt=-mavx --copt=-mavx2
+
 # Enable Ruy
 build --copt=-DTFLITE_WITH_RUY
 

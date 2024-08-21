@@ -47,3 +47,7 @@ gradleBuild
 Podfile.lock
 Pods
 xcuserdata
+
+venv
+pip_pkg
+compute-engine.code-workspace

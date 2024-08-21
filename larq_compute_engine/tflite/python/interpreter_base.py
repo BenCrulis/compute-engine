@@ -1,6 +1,8 @@
 from collections.abc import Iterator
 from typing import Union, Optional
 
+from tensorflow.lite.python.interpreter import SignatureRunner, Interpreter
+
 import numpy as np
 from tqdm import tqdm
 
@@ -25,6 +27,11 @@ def data_generator(x: Union[Data, Iterator[Data]]) -> Iterator[list[np.ndarray]]
             "Expected either a list of inputs or a Numpy array with implicit initial "
             f"batch dimension or an iterator yielding one of the above. Received: {x}"
         )
+
+
+class TFLiteInterpreterWrapper(Interpreter):
+    def __init__(self, larq_interpreter):
+        self.larq_interpreter = larq_interpreter
 
 
 class InterpreterBase:
@@ -70,6 +77,20 @@ class InterpreterBase:
     def output_zero_points(self) -> list[Optional[int]]:
         """Returns a list of input zero points."""
         return self.interpreter.output_zero_points
+    
+    def get_interpreter(self):
+        """Returns wrapped interpreter."""
+        return self.interpreter
+    
+    def get_signature_runner(self, signature_key):
+        """Returns a list of method runner."""
+        # return self.interpreter.get_signature_runner(name)
+        print("Creating SignatureRunner object")
+        return SignatureRunner(self.interpreter, signature_key)
+    
+    def get_signature_keys(self):
+        """Returns a list of method keys."""
+        return self.interpreter.get_signature_keys()
 
     def predict(self, x: Union[Data, Iterator[Data]], verbose: int = 0) -> Data:
         """Generates output predictions for the input samples.

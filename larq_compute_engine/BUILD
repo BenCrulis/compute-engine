@@ -19,9 +19,11 @@ py_library(
         "//larq_compute_engine/mlir:__init__.py",
         "//larq_compute_engine/mlir:python/__init__.py",
         "//larq_compute_engine/tflite:__init__.py",
+        "//larq_compute_engine/ops:__init__.py",
     ],
     deps = [
         "//larq_compute_engine/mlir:converter",
         "//larq_compute_engine/tflite/python:interpreter",
+        "//larq_compute_engine/ops:custom_ops_py",
     ],
 )

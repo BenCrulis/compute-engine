@@ -19,6 +19,34 @@ TfLiteRegistration* Register_BCONV_2D();
 TfLiteRegistration* Register_BCONV_2D_REF();
 TfLiteRegistration* Register_BCONV_2D_OPT_INDIRECT_BGEMM();
 TfLiteRegistration* Register_BMAXPOOL_2D();
+TfLiteRegistration* Register_TERNARY_OPT();
+TfLiteRegistration* Register_UNPACK_TERNARY_OPT();
+
+
+void register_all_custom_ops(MutableOpResolver* resolver) {
+  resolver->AddCustom("TernaryMatmul",
+                      compute_engine::tflite::Register_TERNARY_OPT());
+  resolver->AddCustom("UnpackTernary",
+                      compute_engine::tflite::Register_UNPACK_TERNARY_OPT());
+};
+
+
+void register_all_ops(uintptr_t mutable_op_resolver_ptr) {
+  auto* resolver = reinterpret_cast<MutableOpResolver*>(mutable_op_resolver_ptr);
+
+  resolver->AddCustom("LceQuantize",
+                      compute_engine::tflite::Register_QUANTIZE());
+  resolver->AddCustom("LceDequantize",
+                      compute_engine::tflite::Register_DEQUANTIZE());
+  resolver->AddCustom("LceBconv2d",
+                      compute_engine::tflite::Register_BCONV_2D());
+    
+  resolver->AddCustom("LceBMaxPool2d",
+                      compute_engine::tflite::Register_BMAXPOOL_2D());
+
+  // custom operations
+  register_all_custom_ops(resolver);
+};
 
 // By calling this function on TF lite mutable op resolver, all LCE custom ops
 // will be registerd to the op resolver.
@@ -50,6 +78,9 @@ inline void RegisterLCECustomOps(::tflite::MutableOpResolver* resolver,
   }
   resolver->AddCustom("LceBMaxPool2d",
                       compute_engine::tflite::Register_BMAXPOOL_2D());
+
+  // custom operations
+  register_all_custom_ops(resolver);
 };
 
 }  // namespace tflite

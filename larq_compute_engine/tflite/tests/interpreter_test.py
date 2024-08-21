@@ -69,5 +69,41 @@ def test_interpreter_multi_input(use_iterator):
     np.testing.assert_allclose(output_y, expected_output_y)
 
 
+def test_ternary():
+    from larq_compute_engine.ops import ternary_matmul, Ternary, pack_fn
+
+    # w = tf.cast(tf.random.uniform((10, 51), maxval=255, dtype=tf.int32), dtype=tf.uint8)
+    w = np.ones((22, 22), dtype=np.uint8)
+    w = np.triu(w, k=0)
+    w = tf.convert_to_tensor(w)
+    
+    print("w:", w)
+
+    w = pack_fn(w)
+
+    print("packed:", w)
+
+    # input_shape = (4, 3, 202,)
+    input_shape = (22,)
+    x = tf.keras.Input(input_shape)
+    model = tf.keras.Model(
+        x, Ternary()(x, w)
+    )
+
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    converter.allow_custom_ops = True
+
+    converted = converter.convert()
+
+    interpreter = Interpreter(converted, num_threads=2)
+
+    # inputs = np.random.uniform(-1, 1, size=(16, *input_shape)).astype(np.float32)
+    inputs = np.ones((1, 22,), dtype=np.float32)
+    output = interpreter.predict(inputs, 1)
+
+    print("output:", output)
+
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-s"]))

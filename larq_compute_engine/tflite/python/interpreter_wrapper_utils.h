@@ -71,6 +71,26 @@ class InterpreterWrapperBase {
     return get_scales(interpreter_->outputs());
   }
 
+
+  // exposed experimental methods
+  pybind11::object get_wrapped() {
+    MINIMAL_CHECK(interpreter_);
+    return interpreter_;
+  }
+
+  pybind11::list get_signature_keys() {
+    MINIMAL_CHECK(interpreter_);
+    return get_signature_keys_raw();
+  }
+
+  pybind11::object get_signature_runner(pybind11::str signature_key) {
+    MINIMAL_CHECK(interpreter_);
+    // std::string signature_key_string = signature_key;
+    // const char* signature_key_chars = signature_key_string.c_str();
+    // tflite::SignatureRunner* runner = interpreter_->GetSignatureRunner(signature_key_chars);
+    return pybind11::cast(nullptr);
+  }
+
  protected:
   // Calls to MicroInterpreter::tensor allocate memory, so we must cache them
   TfLiteTensor* get_tensor(size_t index) {
@@ -91,6 +111,8 @@ class InterpreterWrapperBase {
   pybind11::list get_zero_points(const TensorList& tensors);
   template <typename TensorList>
   pybind11::list get_scales(const TensorList& tensors);
+
+  pybind11::list get_signature_keys_raw();
 };
 
 TfLiteType TfLiteTypeFromPyType(pybind11::dtype py_type) {
@@ -299,6 +321,19 @@ pybind11::list InterpreterWrapperBase<InterpreterType>::predict(
     result.append(nparray);
   }
 
+  return result;
+}
+
+template <typename InterpreterType>
+pybind11::list InterpreterWrapperBase<InterpreterType>::get_signature_keys_raw() {
+  pybind11::list result;
+
+  auto keys = interpreter_->signature_keys();
+
+  for (auto key: keys) {
+    result.append(pybind11::cast(key));
+  }
+      
   return result;
 }
 

@@ -84,6 +84,7 @@ py_test(
     srcs = ["interpreter_test.py"],
     deps = [
         "//larq_compute_engine/tflite/python:interpreter",
+        "//larq_compute_engine/ops:custom_ops_py",
         tf_requirement("numpy"),
         lce_requirement("pytest"),
         lce_requirement("tensorflow"),

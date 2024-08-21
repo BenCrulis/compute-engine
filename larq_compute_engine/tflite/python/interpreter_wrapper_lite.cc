@@ -77,5 +77,9 @@ PYBIND11_MODULE(interpreter_wrapper_lite, m) {
                     nullptr)
       .def_property("output_scales", &LiteInterpreterWrapper::get_output_scales,
                     nullptr)
+      .def("get_signature_keys", &LiteInterpreterWrapper::get_signature_keys)
+      // .def("get_signature_runner", &LiteInterpreterWrapper::get_signature_runner)
+      // .def("get_wrapped", &LiteInterpreterWrapper::get_wrapped)
       .def("predict", &LiteInterpreterWrapper::predict);
+  m.def("register_tflite_all_ops", &compute_engine::tflite::register_all_ops, "function that takes register all custom ops");
 };
