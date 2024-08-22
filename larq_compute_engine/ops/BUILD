@@ -9,7 +9,7 @@ package(default_visibility = ["//visibility:public"])
 tf_custom_op_library(
     name = "custom_ops.so",
     srcs = ["custom_ops.cc"],
-    linkopts = tf_copts() + ["-Lvenv/lib64/python3.11/site-packages/tensorflow -l:libtensorflow_framework.so.2"],
+    linkopts = tf_copts() + ["-Lvenv/lib64/python3.11/site-packages/tensorflow", "-l:libtensorflow_framework.so.2"],
     deps = [
         "//larq_compute_engine/core/ternary:ternary",
         # "@org_tensorflow//tensorflow/core:framework",
@@ -64,7 +64,7 @@ pybind_extension(
     name = "custom_ops_tmp",
     srcs = ["custom_ops.cc"],
     module_name = "custom_ops",
-    linkopts = tf_copts() + ["-L/home/crulis/Documents/projects/compute-engine/venv/lib64/python3.11/site-packages/tensorflow -l:libtensorflow_framework.so.2"],
+    linkopts = tf_copts() + ["-Lvenv/lib64/python3.11/site-packages/tensorflow", "-l:libtensorflow_framework.so.2"],
     deps = [
         ":custom_ops.so",
         "@org_tensorflow//tensorflow/core:framework",
