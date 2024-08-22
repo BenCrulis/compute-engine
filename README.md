@@ -1,3 +1,26 @@
+# This is a modified version of the Larq Compute Engine that includes additional custom operators
+
+## Install and compile:
+
+1. create a virtual environment called `venv` in the project root directory (the exact name `venv` and location is important)
+2. run `./configure.py`
+3. run `pip-compile --allow-unsafe --no-emit-index-url --strip-extras larq_compute_engine/requirements.in` to generate the updated `requirements.txt` file
+4. install the requirements `pip install -r larq_compute_engine/requirements.txt`
+5. install bazelisk if it is not already installed
+6. run `bazelisk build :build_pip_pkg`
+7. run `./build_pip_pkg pip_pkg`
+
+The pip wheel package with the modified version of the LCE will be found inside of the `pip_pkg` directory
+
+The build process might also require to do the following:
+- initialize git submodules
+- set tensorflow to the right version in the `third_party` directory
+- use `bazelisk clean --expunge` to completely clean up the build files in case of environment change
+- slightly alter laq_compute_engine/ops/BUILD to correctly link against libtensorflow_framework (if anyone can help making the discovery of this path automatic, I am all ears)
+
+
+# The original README is copied below
+
 # Larq Compute Engine <img src="https://user-images.githubusercontent.com/13285808/74535800-84017780-4f2e-11ea-9169-52f5ac83d685.png" alt="larq logo" height="80px" align="right" />
 
 [![Tests](https://github.com/larq/compute-engine/workflows/Tests/badge.svg)](https://github.com/larq/compute-engine/actions?workflow=Tests) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/larq-compute-engine.svg)](https://pypi.org/project/larq-compute-engine/) [![PyPI](https://img.shields.io/pypi/v/larq-compute-engine.svg)](https://pypi.org/project/larq-compute-engine/) [![PyPI - License](https://img.shields.io/pypi/l/larq-compute-engine.svg)](https://github.com/larq/compute-engine/blob/main/LICENSE)
