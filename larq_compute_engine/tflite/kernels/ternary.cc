@@ -672,15 +672,22 @@ void thread_matmul(const int idx_start, const int idx_stop, thread_data data) {
 }
 
 
-void tiled_implementation_threaded(const int batch_size, const int chan_in, const int chan_out, const int compressed_chan_size,
+void tiled_implementation_threaded(const int reco_num_threads, const int batch_size, const int chan_in, const int chan_out, const int compressed_chan_size,
                               const float* input_data, float* output_data, const uint8* weight_data,
                               const float* scale, const float* bias, const float clamp
                               ) {
   const long int remainder = chan_in % 4;
   const long int compressed_chan_size_target = remainder == 0? compressed_chan_size : compressed_chan_size - 1;
 
-  const int n_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1);
-  int thread_block_size = chan_out / n_threads;
+  int n_threads = 1;
+  if (reco_num_threads < 0) {
+    n_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1);
+  }
+  else {
+    n_threads = reco_num_threads;
+  }
+  
+  const int thread_block_size = chan_out / n_threads;
 
   thread threads[n_threads];
 
@@ -745,7 +752,7 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   // reference_implementation(batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data);
   // tiled_implementation3(batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data, scale_data, bias_data, clamp_data);
   // tiled_implementation_simd(batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data, scale_data, bias_data, clamp_data);
-  tiled_implementation_threaded(batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data, scale_data, bias_data, clamp_data);
+  tiled_implementation_threaded(context->recommended_num_threads, batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data, scale_data, bias_data, clamp_data);
   // tiled_implementation3(batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data);
 
   return kTfLiteOk;
