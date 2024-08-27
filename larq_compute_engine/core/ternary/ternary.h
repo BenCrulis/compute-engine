@@ -49,7 +49,7 @@ void unpack_ternary_chunk(const int start_idx, const int end_idx, const uint8* p
 }
 
 
-void unpack_ternary_threaded(const uint8* packed, float* out, const int unpacked_chan_in, const int chan_out) {
+void unpack_ternary_threaded(const int num_threads, const uint8* packed, float* out, const int unpacked_chan_in, const int chan_out) {
   int packed_chan_in = unpacked_chan_in / 4;
   const int remainder = unpacked_chan_in % 4;
 
@@ -59,7 +59,14 @@ void unpack_ternary_threaded(const uint8* packed, float* out, const int unpacked
 
   const int target_packed_size = remainder == 0 ? packed_chan_in : packed_chan_in - 1;
 
-  const int n_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1);
+  int n_threads = 1;
+  if (num_threads <= 0) {
+    n_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1);
+  }
+  else {
+    n_threads = num_threads;
+  }
+
   int thread_block_size = chan_out / n_threads;
 
   std::thread threads[n_threads];

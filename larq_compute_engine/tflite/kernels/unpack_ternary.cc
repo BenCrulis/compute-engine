@@ -89,8 +89,10 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   
   int chan_out = weights_shape.Dims(0);
 
+  int num_threads = context->recommended_num_threads;
+
   // unpack_ternary(weight_data, output_data, size_data, chan_out);
-  unpack_ternary_threaded(weight_data, output_data, size_data, chan_out);
+  unpack_ternary_threaded(num_threads, weight_data, output_data, size_data, chan_out);
 
   TfLiteIntArray* shape = TfLiteIntArrayCreate(2);
 
