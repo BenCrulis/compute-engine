@@ -362,6 +362,266 @@ void switch_increment(const uint8 w, const float* input, float* out) {
 }
 
 
+const __m128 unpack_table[256] = {
+  _mm_set_ps(-1, -1, -1, -1),
+  _mm_set_ps(0, -1, -1, -1),
+  _mm_set_ps(1, -1, -1, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, -1, -1),
+  _mm_set_ps(0, 0, -1, -1),
+  _mm_set_ps(1, 0, -1, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, -1, -1),
+  _mm_set_ps(0, 1, -1, -1),
+  _mm_set_ps(1, 1, -1, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, 0, -1),
+  _mm_set_ps(0, -1, 0, -1),
+  _mm_set_ps(1, -1, 0, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, 0, -1),
+  _mm_set_ps(0, 0, 0, -1),
+  _mm_set_ps(1, 0, 0, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, 0, -1),
+  _mm_set_ps(0, 1, 0, -1),
+  _mm_set_ps(1, 1, 0, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, 1, -1),
+  _mm_set_ps(0, -1, 1, -1),
+  _mm_set_ps(1, -1, 1, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, 1, -1),
+  _mm_set_ps(0, 0, 1, -1),
+  _mm_set_ps(1, 0, 1, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, 1, -1),
+  _mm_set_ps(0, 1, 1, -1),
+  _mm_set_ps(1, 1, 1, -1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, -1, 0),
+  _mm_set_ps(0, -1, -1, 0),
+  _mm_set_ps(1, -1, -1, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, -1, 0),
+  _mm_set_ps(0, 0, -1, 0),
+  _mm_set_ps(1, 0, -1, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, -1, 0),
+  _mm_set_ps(0, 1, -1, 0),
+  _mm_set_ps(1, 1, -1, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, 0, 0),
+  _mm_set_ps(0, -1, 0, 0),
+  _mm_set_ps(1, -1, 0, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, 0, 0),
+  _mm_set_ps(0, 0, 0, 0),
+  _mm_set_ps(1, 0, 0, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, 0, 0),
+  _mm_set_ps(0, 1, 0, 0),
+  _mm_set_ps(1, 1, 0, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, 1, 0),
+  _mm_set_ps(0, -1, 1, 0),
+  _mm_set_ps(1, -1, 1, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, 1, 0),
+  _mm_set_ps(0, 0, 1, 0),
+  _mm_set_ps(1, 0, 1, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, 1, 0),
+  _mm_set_ps(0, 1, 1, 0),
+  _mm_set_ps(1, 1, 1, 0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, -1, 1),
+  _mm_set_ps(0, -1, -1, 1),
+  _mm_set_ps(1, -1, -1, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, -1, 1),
+  _mm_set_ps(0, 0, -1, 1),
+  _mm_set_ps(1, 0, -1, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, -1, 1),
+  _mm_set_ps(0, 1, -1, 1),
+  _mm_set_ps(1, 1, -1, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, 0, 1),
+  _mm_set_ps(0, -1, 0, 1),
+  _mm_set_ps(1, -1, 0, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, 0, 1),
+  _mm_set_ps(0, 0, 0, 1),
+  _mm_set_ps(1, 0, 0, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, 0, 1),
+  _mm_set_ps(0, 1, 0, 1),
+  _mm_set_ps(1, 1, 0, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, -1, 1, 1),
+  _mm_set_ps(0, -1, 1, 1),
+  _mm_set_ps(1, -1, 1, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 0, 1, 1),
+  _mm_set_ps(0, 0, 1, 1),
+  _mm_set_ps(1, 0, 1, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(-1, 1, 1, 1),
+  _mm_set_ps(0, 1, 1, 1),
+  _mm_set_ps(1, 1, 1, 1),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0),
+  _mm_set_ps(0.0, 0.0, 0.0, 0.0)
+};
+
+
 inline void add_increment_old(const uint8 w, const float* input_data, float* out0, float* out1, float* out2, float* out3) {
 // inline void add_increment_old(const uint8 w, const float* input_data, float* out) {
   float w0 = static_cast<float>((w >> 6) & 3) - 1.0;
@@ -489,10 +749,11 @@ const __m128i ones = _mm_set_epi32(1, 1, 1, 1);
 const __m128i twos = _mm_set_epi32(2, 2, 2, 2);
 
 
-inline void add_increment_simd(const uint8 w, const float* input_data, __m128* out) {
+inline void add_increment_simd_old(const uint8 w, const float* input_data, __m128* out) {
   const __m128 input = _mm_loadu_ps(input_data); // input_data[0] is placed in the right (least significant bits) 
   // const __m128i ww = _mm_setr_epi32(w >> 6, w >> 4, w >> 2, w); // beware of loading order, we reverse the order to match the input 
-  __m128i ww = _mm_set_epi32(w, w, w, w);
+  // __m128i ww = _mm_set_epi32(w, w, w, w);
+  __m128i ww = _mm_set1_epi32(w);
   ww = _mm_srav_epi32(ww, shifts);
   const __m128i masked = _mm_and_si128(ww, mask);
   const __m128i centered = _mm_sub_epi32(masked, ones);
@@ -504,10 +765,17 @@ inline void add_increment_simd(const uint8 w, const float* input_data, __m128* o
   *out = _mm_fmadd_ps(input, converted, *out);
 }
 
+inline void add_increment_simd(const uint8 w, const float* input_data, __m128* out) {
+  const __m128 input = _mm_loadu_ps(input_data); // input_data[0] is placed in the right (least significant bits) 
+  __m128 ww = unpack_table[w];
+  *out = _mm_fmadd_ps(input, ww, *out);
+}
+
 
 inline void add_increment_simd_maskload(const uint8 w, const float* input_data, __m128* out) {
   // const __m128i ww = _mm_setr_epi32(w >> 6, w >> 4, w >> 2, w); // beware of loading order, we reverse the order to match the input 
   __m128i ww = _mm_set_epi32(w, w, w, w);
+  // __m128i ww = _mm_set1_epi32(w);
   ww = _mm_srav_epi32(ww, shifts);
   const __m128i masked = _mm_and_si128(ww, mask);
 
@@ -630,13 +898,19 @@ void thread_matmul(const int idx_start, const int idx_stop, thread_data data) {
         __m128 out = _mm_setzero_ps();
 
         // float out = 0.0;
-        for (int k = 0; k < compressed_chan_size_target; k++) {
-          const uint8 w = weight_data[j*compressed_chan_size + k];
-          const int in_idx_base = i*chan_in + k*4;
-          // switch_increment(w, &input_data[in_idx_base], &out);
-          // add_increment(w, &input_data[in_idx_base], &out0, &out1, &out2, &out3);
-          add_increment_simd(w, &input_data[in_idx_base], &out);
-          // add_increment_old(w, &input_data[in_idx_base], &out);
+        // for (int k = 0; k < compressed_chan_size_target; k++) {
+        //   const uint8 w = weight_data[j*compressed_chan_size + k];
+        //   const int in_idx_base = i*chan_in + k*4;
+        //   // switch_increment(w, &input_data[in_idx_base], &out);
+        //   // add_increment(w, &input_data[in_idx_base], &out0, &out1, &out2, &out3);
+        //   add_increment_simd(w, &input_data[in_idx_base], &out);
+        //   // add_increment_old(w, &input_data[in_idx_base], &out);
+        // }
+
+        int w_index = j*compressed_chan_size;
+        int in_idx_base = i*chan_in;
+        for (int k = 0; k < compressed_chan_size_target; k++, w_index++, in_idx_base += 4) {
+          add_increment_simd(weight_data[w_index], &input_data[in_idx_base], &out);
         }
 
         float out_scalar =  _mm_cvtss_f32(_mm_shuffle_ps(out, out, 0));  // Extract the first float from res
@@ -676,11 +950,9 @@ void tiled_implementation_threaded(const int reco_num_threads, const int batch_s
                               const float* input_data, float* output_data, const uint8* weight_data,
                               const float* scale, const float* bias, const float clamp
                               ) {
-  const long int remainder = chan_in % 4;
-  const long int compressed_chan_size_target = remainder == 0? compressed_chan_size : compressed_chan_size - 1;
-
+  
   int n_threads = 1;
-  if (reco_num_threads < 0) {
+  if (reco_num_threads <= 0) {
     n_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1);
   }
   else {
