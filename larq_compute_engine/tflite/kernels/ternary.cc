@@ -362,7 +362,7 @@ void switch_increment(const uint8 w, const float* input, float* out) {
 }
 
 
-const __m128 unpack_table[256] = {
+alignas(64) const __m128 unpack_table[256] = {
   _mm_set_ps(-1, -1, -1, -1),
   _mm_set_ps(0, -1, -1, -1),
   _mm_set_ps(1, -1, -1, -1),
@@ -885,7 +885,7 @@ void thread_matmul(const int idx_start, const int idx_stop, thread_data data) {
 
 
   const long int remainder = chan_in % 4;
-  const long int compressed_chan_size_target = remainder == 0? compressed_chan_size : compressed_chan_size - 1;
+  const long int compressed_chan_size_target = compressed_chan_size;
 
   // tiling loop
   for (int kk = idx_start ; kk < idx_stop ; kk += BLOCK_SIZE) {
@@ -895,40 +895,35 @@ void thread_matmul(const int idx_start, const int idx_stop, thread_data data) {
       for (long int j = kk; j < idx_stop && j < kk + BLOCK_SIZE; j++) {
         const int out_idx = i*chan_out+j;
         
-        __m128 out = _mm_setzero_ps();
-
-        // float out = 0.0;
-        // for (int k = 0; k < compressed_chan_size_target; k++) {
-        //   const uint8 w = weight_data[j*compressed_chan_size + k];
-        //   const int in_idx_base = i*chan_in + k*4;
-        //   // switch_increment(w, &input_data[in_idx_base], &out);
-        //   // add_increment(w, &input_data[in_idx_base], &out0, &out1, &out2, &out3);
-        //   add_increment_simd(w, &input_data[in_idx_base], &out);
-        //   // add_increment_old(w, &input_data[in_idx_base], &out);
-        // }
+        __m128 out0 = _mm_setzero_ps();
+        __m128 out1 = _mm_setzero_ps();
+        __m128 out2 = _mm_setzero_ps();
+        __m128 out3 = _mm_setzero_ps();
 
         int w_index = j*compressed_chan_size;
         int in_idx_base = i*chan_in;
-        for (int k = 0; k < compressed_chan_size_target; k++, w_index++, in_idx_base += 4) {
-          add_increment_simd(weight_data[w_index], &input_data[in_idx_base], &out);
+        int k = 0;
+        for (; k < compressed_chan_size_target; k+=4, w_index+=4, in_idx_base += 16) {
+          add_increment_simd(weight_data[w_index  ], &input_data[in_idx_base     ], &out0);
+          add_increment_simd(weight_data[w_index+1], &input_data[in_idx_base +  4], &out1);
+          add_increment_simd(weight_data[w_index+2], &input_data[in_idx_base +  8], &out2);
+          add_increment_simd(weight_data[w_index+3], &input_data[in_idx_base + 12], &out3);
         }
+
+        // handle remainder
+        for (; k < compressed_chan_size_target; k++, w_index++, in_idx_base += 4) {
+          add_increment_simd(weight_data[w_index], &input_data[in_idx_base], &out0);
+        }
+
+        out0 = _mm_add_ps(out0, out1);
+        out2 = _mm_add_ps(out2, out3);
+        out0 = _mm_add_ps(out0, out2);
+        const __m128 out = out0;
 
         float out_scalar =  _mm_cvtss_f32(_mm_shuffle_ps(out, out, 0));  // Extract the first float from res
         out_scalar += _mm_cvtss_f32(_mm_shuffle_ps(out, out, 1));
         out_scalar += _mm_cvtss_f32(_mm_shuffle_ps(out, out, 2));
         out_scalar += _mm_cvtss_f32(_mm_shuffle_ps(out, out, 3));
-
-        const uint8 w = weight_data[j*compressed_chan_size + compressed_chan_size - 1];
-        in_idx_base = i*chan_in + chan_in - 4;
-        if (remainder > 0) {
-          accum_ternary_macro(out_scalar, input_data[in_idx_base], w >> 6);
-        }
-        if (remainder > 1) {
-          accum_ternary_macro(out_scalar, input_data[in_idx_base+1], w >> 4);
-        }
-        if (remainder > 2) {
-          accum_ternary_macro(out_scalar, input_data[in_idx_base+2], w >> 2);
-        }
 
         out_scalar *= scale[j];
         out_scalar += bias[j];
