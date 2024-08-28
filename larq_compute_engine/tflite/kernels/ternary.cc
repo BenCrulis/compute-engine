@@ -919,7 +919,7 @@ void thread_matmul(const int idx_start, const int idx_stop, thread_data data) {
         out_scalar += _mm_cvtss_f32(_mm_shuffle_ps(out, out, 3));
 
         const uint8 w = weight_data[j*compressed_chan_size + compressed_chan_size - 1];
-        const int in_idx_base = i*chan_in + chan_in - 4;
+        in_idx_base = i*chan_in + chan_in - 4;
         if (remainder > 0) {
           accum_ternary_macro(out_scalar, input_data[in_idx_base], w >> 6);
         }
