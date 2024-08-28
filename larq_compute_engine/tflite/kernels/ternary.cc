@@ -961,7 +961,7 @@ void tiled_implementation_threaded(const int reco_num_threads, const int batch_s
   
   const int thread_block_size = chan_out / n_threads;
 
-  thread threads[n_threads];
+  thread threads[n_threads-1];
 
   for (int i = 0; i < n_threads - 1; i++) {
     const int start_idx = i * thread_block_size;
@@ -973,7 +973,7 @@ void tiled_implementation_threaded(const int reco_num_threads, const int batch_s
   const int start_idx = (n_threads - 1) * thread_block_size;
   const int end_idx = chan_out;
   thread_data data = {batch_size, chan_in, chan_out, compressed_chan_size, input_data, output_data, weight_data, scale, bias, clamp};
-  threads[n_threads - 1] = thread(thread_matmul, start_idx, end_idx, data);
+  thread_matmul(start_idx, end_idx, data);
 
   for (thread &t : threads) {
     t.join();
